@@ -11,7 +11,7 @@ This file contains functions to register a COCO-format dataset to the DatasetCat
 __all__ = ["register_coco_instances", "register_coco_panoptic_separated"]
 
 
-def register_coco_instances(name, metadata, json_file, image_root):
+def register_coco_instances(name, metadata, json_file, image_root, samples=None):
     """
     Register a dataset in COCO's json annotation format for
     instance detection, instance segmentation and keypoint detection.
@@ -29,7 +29,10 @@ def register_coco_instances(name, metadata, json_file, image_root):
         image_root (str): directory which contains all the images.
     """
     # 1. register a function which returns dicts
-    DatasetCatalog.register(name, lambda: load_coco_json(json_file, image_root, name))
+    if samples is not None:
+        DatasetCatalog.register(name, lambda: load_coco_json(json_file, image_root, name)[:samples])
+    else:
+        DatasetCatalog.register(name, lambda: load_coco_json(json_file, image_root, name))
 
     # 2. Optionally, add metadata about this dataset,
     # since they might be useful in evaluation, visualization or logging
@@ -39,7 +42,7 @@ def register_coco_instances(name, metadata, json_file, image_root):
 
 
 def register_coco_panoptic_separated(
-    name, metadata, image_root, panoptic_root, panoptic_json, sem_seg_root, instances_json
+        name, metadata, image_root, panoptic_root, panoptic_json, sem_seg_root, instances_json
 ):
     """
     Register a COCO panoptic segmentation dataset named `name`.
