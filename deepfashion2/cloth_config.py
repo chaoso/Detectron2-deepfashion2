@@ -17,6 +17,7 @@ class ClothConfig:
     IMAGE_DIR_VAL = "F:\\Downloads\\validation\\validation\\image"
 
     NUMBER_OF_SAMPLES_TRAIN = 100
+    NUMBER_OF_SAMPLES_VAL = 30
 
     cfg = get_cfg()
     cfg.merge_from_file("../configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
