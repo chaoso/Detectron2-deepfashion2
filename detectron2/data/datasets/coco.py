@@ -64,6 +64,14 @@ def load_coco_json(json_file, image_root, dataset_name=None, extra_annotation_ke
         thing_classes = [c["name"] for c in sorted(cats, key=lambda x: x["id"])]
         meta.thing_classes = thing_classes
 
+        # Add keypoint names from categories, all categories have the same 294 keypoint names, which are string numbers
+        meta.keypoint_names = [keypoint_name for keypoint_name in coco_api.dataset["categories"][0]["keypoints"]]
+        keypoint_names = meta.keypoint_names
+        logger.info("{}".format(keypoint_names))
+        meta.keypoint_flip_map = list(zip(keypoint_names[:int(len(keypoint_names) / 2)],
+                                          keypoint_names[::-1][:int(len(keypoint_names) / 2)]))
+        logger.info("{}".format(meta.keypoint_flip_map))
+
         # In COCO, certain category ids are artificially removed,
         # and by convention they are always ignored.
         # We deal with COCO's id issue and translate
