@@ -70,7 +70,7 @@ def load_coco_json(json_file, image_root, dataset_name=None, extra_annotation_ke
         logger.info("{}".format(keypoint_names))
         meta.keypoint_flip_map = list(zip(keypoint_names[:int(len(keypoint_names) / 2)],
                                           keypoint_names[::-1][:int(len(keypoint_names) / 2)]))
-        logger.info("{}".format(meta.keypoint_flip_map))
+        logger.info("Dict: {}".format(meta.keypoint_flip_map))
 
         # In COCO, certain category ids are artificially removed,
         # and by convention they are always ignored.
