@@ -1,20 +1,19 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import contextlib
 import io
 import logging
-import contextlib
 import os
+
 from PIL import Image
-
-from fvcore.common.timer import Timer
-from detectron2.structures import BoxMode
 from fvcore.common.file_io import PathManager
+from fvcore.common.timer import Timer
 
+from detectron2.structures import BoxMode
 from .. import MetadataCatalog, DatasetCatalog
 
 """
 This file contains functions to parse COCO-format annotations into dicts in "Detectron2 format".
 """
-
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +63,50 @@ def load_coco_json(json_file, image_root, dataset_name=None, extra_annotation_ke
         thing_classes = [c["name"] for c in sorted(cats, key=lambda x: x["id"])]
         meta.thing_classes = thing_classes
 
-        # Add keypoint names from categories, all categories have the same 294 keypoint names, which are string numbers
+        # Add keypoint names from categories, all categories have the same 294 keypoint names, which are string numbers from 1-294
         meta.keypoint_names = [keypoint_name for keypoint_name in coco_api.dataset["categories"][0]["keypoints"]]
-        keypoint_names = meta.keypoint_names
-        logger.info("{}".format(keypoint_names))
-        meta.keypoint_flip_map = list(zip(keypoint_names[:int(len(keypoint_names) / 2)],
-                                          keypoint_names[::-1][:int(len(keypoint_names) / 2)]))
-        logger.info("Dict: {}".format(meta.keypoint_flip_map))
+
+        # For keypoints, the same flips don't need to add since that is automatically added later, e.g (1,1)
+        # Also don't need to add flipped indices, e.g (1,6) and (6,1), only need to add (1,6),
+        # since the create_keypoint_hflip_indices adds the flipped counterparts
+        meta.keypoint_flip_map = [
+            # Short sleeve top +0
+            ("2", "6"), ("3", "5"), ("7", "25"), ("8", "24"), ("9", "23"), ("10", "22"), ("11", "21"), ("12", "20"),
+            ("13", "19"), ("14", "18"), ("15", "17"),
+            # Long sleeve top +25
+            ("27", "31"), ("28", "30"), ("32", "58"), ("33", "57"), ("34", "56"), ("35", "55"), ("36", "53"), ("37", "54"),
+            ("38", "52"), ("39", "51"), ("40", "50"), ("41", "49"), ("42", "48"), ("43", "47"), ("44", "46"), ("45", "45"),
+            # Short sleeve outwear +58
+            ("60", "84"), ("61", "63"), ("62", "64"), ("65", "83"), ("66", "82"), ("67", "81"), ("68", "80"),
+            ("69", "79"), ("70", "78"), ("71", "77"), ("72", "76"), ("73", "75"), ("74", "87"), ("89", "86"), ("88", "85"),
+            # Long sleeve outwear +89
+            ("91", "95"), ("92", "94"), ("93", "123"), ("96", "122"), ("97", "121"), ("98", "120"), ("99", "119"),
+            ("100", "118"), ("101", "117"), ("102", "116"), ("103", "115"), ("104", "114"), ("105", "113"), ("106", "112"),
+            ("107", "111"), ("108", "110"), ("109", "126"), ("128", "125"), ("127", "124"),
+            # Vest +128
+            ("130", "134"), ("131", "133"), ("135", "143"), ("136", "142"), ("137", "141"), ("138", "140"),
+            # Sling +143
+            ("145", "149"), ("146", "148"), ("150", "158"), ("151", "157"), ("152", "156"), ("153", "155"),
+            # Shorts +158
+            ("159", "161"), ("162", "168"), ("163", "167"), ("164", "166"),
+            # Trousers +168
+            ("169", "171"), ("172", "182"), ("173", "181"), ("174", "180"), ("175", "179"), ("176", "178"),
+            # Skirt +182
+            ("183", "185"), ("186", "190"), ("187", "189"),
+            # Short sleeve dress +190
+            ("192", "196"), ("193", "195"), ("197", "219"), ("198", "218"), ("199", "217"), ("200", "216"), ("201", "215"),
+            ("202", "214"), ("203", "213"), ("204", "212"), ("205", "211"), ("206", "210"), ("207", "209"),
+            # Long sleeve dress +219
+            ("221", "225"), ("222", "224"), ("226", "256"), ("227", "255"), ("228", "254"), ("229", "253"), ("230", "252"),
+            ("231", "251"), ("232", "250"), ("233", "249"), ("234", "248"), ("235", "247"), ("236", "246"), ("237", "245"),
+            ("238", "244"), ("239", "243"), ("240", "242"),
+            # Vest dress +256
+            ("258", "262"), ("259", "261"), ("263", "275"), ("264", "274"), ("265", "273"), ("266", "272"), ("267", "271"),
+            ("268", "270"),
+            # Sling dress +275
+            ("277", "281"), ("278", "280"), ("282", "294"), ("283", "293"), ("284", "292"), ("285", "291"), ("286", "290"),
+            ("287", "289")
+        ]
 
         # In COCO, certain category ids are artificially removed,
         # and by convention they are always ignored.
@@ -292,7 +328,6 @@ if __name__ == "__main__":
     import numpy as np
     from detectron2.utils.logger import setup_logger
     from detectron2.utils.visualizer import Visualizer
-    import detectron2.data.datasets  # noqa # add pre-defined metadata
     import sys
 
     logger = setup_logger(name=__name__)
